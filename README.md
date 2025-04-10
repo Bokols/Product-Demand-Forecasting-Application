@@ -19,7 +19,7 @@ El proyecto se compone de tres partes principales:
 3. **Herramienta de Pronóstico y Simulación**
    - Aplicación en Streamlit que permite simular escenarios comerciales, generar pronósticos diarios y recibir recomendaciones de inventario.
   
-**Prueba el modelo [aquí:]("https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/")**
+**Prueba el modelo [aquí]("https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/"):**
 
 ## Desarrollo del Modelo (Jupyter Notebook)
 
