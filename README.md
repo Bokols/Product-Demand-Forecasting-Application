@@ -1,5 +1,7 @@
 # Aplicación de Pronóstico de Demanda de Productos
 
+**Prueba el modelo [aquí](https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/):**
+
 ## Introducción
 
 En la industria del retail, anticipar la demanda de productos es esencial para mantener niveles óptimos de inventario, reducir costos operacionales y mejorar la satisfacción del cliente. Este proyecto presenta una **Aplicación de Pronóstico de Demanda de Productos**, una solución de machine learning desarrollada para predecir la demanda diaria a corto plazo utilizando datos históricos de ventas y variables comerciales específicas.
@@ -19,7 +21,7 @@ El proyecto se compone de tres partes principales:
 3. **Herramienta de Pronóstico y Simulación**
    - Aplicación en Streamlit que permite simular escenarios comerciales, generar pronósticos diarios y recibir recomendaciones de inventario.
   
-**Prueba el modelo [aquí](https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/):**
+
 
 ## Desarrollo del Modelo (Jupyter Notebook)
 
@@ -122,4 +124,4 @@ Este proyecto logró desarrollar una solución integral y escalable para la pred
 - Visualización de explicaciones del modelo (SHAP)
 - Conexión con sistemas ERP o de gestión de inventario
 
-**Prueba el modelo [aquí:]("https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/")**
+**Prueba el modelo [aquí](https://appuct-demand-forecasting-application-sr9xuniuxywt3wz5txuzrq.streamlit.app/):**
