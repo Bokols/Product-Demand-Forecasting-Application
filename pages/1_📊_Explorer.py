@@ -11,49 +11,49 @@ import plotly.express as px
 import os
 from datetime import datetime
 
-# Page configuration
-st.set_page_config(page_title="Data Explorer", page_icon="📊", layout="wide")
-st.title("📊 Data Explorer")
+# Configuración de la página
+st.set_page_config(page_title="Explorador de Datos", page_icon="📊", layout="wide")
+st.title("📊 Explorador de Datos")
 st.markdown("""
-Explore the retail demand forecasting dataset and analyze trends.  
-Use the sidebar filters to focus on specific products, time periods, or regions.
+Explora el conjunto de datos de pronóstico de demanda minorista y analiza tendencias.  
+Utiliza los filtros de la barra lateral para enfocarte en productos, períodos o regiones específicas.
 """)
 
-# Add introductory guide
-with st.expander("ℹ️ How to Use This Explorer", expanded=False):
+# Guía introductoria
+with st.expander("ℹ️ Cómo Usar Este Explorador", expanded=False):
     st.markdown("""
-    **Data Explorer Guide**:
+    **Guía del Explorador de Datos**:
     
-    1. **Filter data** using the sidebar controls
-    2. **View metrics** in the summary section
-    3. **Analyze patterns** in the interactive charts
-    4. **Export insights** using the download options
+    1. **Filtra datos** usando los controles de la barra lateral
+    2. **Visualiza métricas** en la sección de resumen
+    3. **Analiza patrones** en los gráficos interactivos
+    4. **Exporta insights** usando las opciones de descarga
     
-    **Key Features**:
-    - Demand trend analysis
-    - Price elasticity visualization
-    - Inventory optimization insights
-    - Business impact calculations
+    **Características Principales**:
+    - Análisis de tendencias de demanda
+    - Visualización de elasticidad de precios
+    - Insights para optimización de inventario
+    - Cálculos de impacto empresarial
     """)
 
 @st.cache_data
 def load_data():
-    """Load and preprocess the retail data"""
+    """Carga y preprocesa los datos minoristas"""
     data_path = os.path.join('data', 'retail_store_inventory.csv')
     df = pd.read_csv(data_path)
     df = clean_column_names(df)
     df = add_product_names(df)
     df['date'] = pd.to_datetime(df['date'])
     
-    # Extract date components with explanations
+    # Extrae componentes de fecha con explicaciones
     date_features = {
-        'year': 'Year extracted from date',
-        'month': 'Month (1-12)',
-        'day': 'Day of month',
-        'day_of_week': 'Day of week (0=Monday)',
-        'day_of_year': 'Day of year (1-365)',
-        'week_of_year': 'ISO week number',
-        'quarter': 'Quarter (1-4)'
+        'year': 'Año extraído de la fecha',
+        'month': 'Mes (1-12)',
+        'day': 'Día del mes',
+        'day_of_week': 'Día de la semana (0=Lunes)',
+        'day_of_year': 'Día del año (1-365)',
+        'week_of_year': 'Número de semana ISO',
+        'quarter': 'Trimestre (1-4)'
     }
     
     for feat, desc in date_features.items():
@@ -66,231 +66,231 @@ def load_data():
     
     return df
 
-# Load data with status
-with st.spinner("Loading data..."):
+# Carga datos con estado
+with st.spinner("Cargando datos..."):
     df = load_data()
 
-# Sidebar filters with tooltips
-st.sidebar.header("Data Filters")
-st.sidebar.markdown("Use these controls to focus on specific data subsets:")
+# Filtros de la barra lateral con tooltips
+st.sidebar.header("Filtros de Datos")
+st.sidebar.markdown("Usa estos controles para enfocarte en subconjuntos específicos:")
 
-# Date range filter with explanation
+# Filtro de rango de fechas con explicación
 min_date = df['date'].min().date()
 max_date = df['date'].max().date()
 
 date_range = st.sidebar.date_input(
-    "Date Range",
+    "Rango de Fechas",
     value=(min_date, max_date),
     min_value=min_date,
     max_value=max_date,
-    help="Select start and end dates to analyze a specific time period"
+    help="Selecciona fechas de inicio y fin para analizar un período específico"
 )
 
 if len(date_range) == 2:
     start_date, end_date = date_range
     df = df[(df['date'].dt.date >= start_date) & (df['date'].dt.date <= end_date)]
-    st.sidebar.caption(f"Showing data from {start_date} to {end_date}")
+    st.sidebar.caption(f"Mostrando datos desde {start_date} hasta {end_date}")
 else:
-    st.sidebar.warning("Please select both start and end dates")
+    st.sidebar.warning("Por favor selecciona ambas fechas de inicio y fin")
 
-# Product filter with search capability
+# Filtro de productos con capacidad de búsqueda
 products = st.sidebar.multiselect(
-    "Products",
+    "Productos",
     options=df['product_name'].unique(),
     default=df['product_name'].unique()[:3],
-    help="Select specific products or leave blank for all products"
+    help="Selecciona productos específicos o deja en blanco para todos"
 )
 if products:
     df = df[df['product_name'].isin(products)]
 
-# Category filter with explanation
+# Filtro de categorías con explicación
 categories = st.sidebar.multiselect(
-    "Categories",
+    "Categorías",
     options=df['category'].unique(),
     default=df['category'].unique(),
-    help="Filter by product category"
+    help="Filtrar por categoría de producto"
 )
 if categories:
     df = df[df['category'].isin(categories)]
 
-# Region filter with explanation
+# Filtro de regiones con explicación
 regions = st.sidebar.multiselect(
-    "Regions",
+    "Regiones",
     options=df['region'].unique(),
     default=df['region'].unique(),
-    help="Focus on specific geographic regions"
+    help="Enfócate en regiones geográficas específicas"
 )
 if regions:
     df = df[df['region'].isin(regions)]
 
-# Store filter with search help
+# Filtro de tiendas con ayuda de búsqueda
 stores = st.sidebar.multiselect(
-    "Stores",
+    "Tiendas",
     options=df['store_id'].unique(),
     default=df['store_id'].unique()[:3],
-    help="Select specific store locations"
+    help="Selecciona ubicaciones de tiendas específicas"
 )
 if stores:
     df = df[df['store_id'].isin(stores)]
 
-# Main content
-st.header("Dataset Overview")
-st.write(f"Displaying {len(df):,} rows from the filtered dataset")
+# Contenido principal
+st.header("Resumen del Conjunto de Datos")
+st.write(f"Mostrando {len(df):,} filas del conjunto de datos filtrado")
 
-# Raw data toggle with warning
-if st.checkbox("Show raw data", help="View the underlying dataset (may be large)"):
+# Alternar datos crudos con advertencia
+if st.checkbox("Mostrar datos crudos", help="Ver el conjunto de datos subyacente (puede ser grande)"):
     st.dataframe(df)
     st.download_button(
-        label="Download Filtered Data",
+        label="Descargar Datos Filtrados",
         data=df.to_csv(index=False),
-        file_name="filtered_retail_data.csv",
+        file_name="datos_minoristas_filtrados.csv",
         mime="text/csv"
     )
 
-# Key metrics with explanations
-st.subheader("Key Metrics")
-with st.expander("About these metrics"):
+# Métricas clave con explicaciones
+st.subheader("Métricas Clave")
+with st.expander("Acerca de estas métricas"):
     st.markdown("""
-    - **Total Units Sold**: Sum of all products sold in filtered dataset
-    - **Average Daily Demand**: Mean units sold per day
-    - **Total Inventory Value**: Current stock × price (at time of recording)
-    - **Average Discount**: Mean promotional discount percentage
+    - **Unidades Totales Vendidas**: Suma de todos los productos vendidos en el conjunto filtrado
+    - **Demanda Diaria Promedio**: Media de unidades vendidas por día
+    - **Valor Total de Inventario**: Stock actual × precio (al momento de registro)
+    - **Descuento Promedio**: Porcentaje medio de descuento promocional
     """)
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Units Sold", f"{df['units_sold'].sum():,.0f}")
-col2.metric("Average Daily Demand", f"{df['units_sold'].mean():,.1f}")
-col3.metric("Total Inventory Value", f"${(df['inventory_level'] * df['price']).sum():,.0f}")
-col4.metric("Average Discount", f"{df['discount'].mean():.1f}%")
+col1.metric("Unidades Totales Vendidas", f"{df['units_sold'].sum():,.0f}")
+col2.metric("Demanda Diaria Promedio", f"{df['units_sold'].mean():,.1f}")
+col3.metric("Valor Total de Inventario", f"${(df['inventory_level'] * df['price']).sum():,.0f}")
+col4.metric("Descuento Promedio", f"{df['discount'].mean():.1f}%")
 
-# Demand analysis section
-st.header("Demand Analysis")
-st.markdown("Explore demand patterns using the interactive tabs below:")
+# Sección de análisis de demanda
+st.header("Análisis de Demanda")
+st.markdown("Explora patrones de demanda usando las pestañas interactivas:")
 
-tab1, tab2, tab3 = st.tabs(["Trends", "Distribution", "Seasonality"])
+tab1, tab2, tab3 = st.tabs(["Tendencias", "Distribución", "Estacionalidad"])
 
 with tab1:
-    st.subheader("Demand Trends Over Time")
-    st.markdown("*How demand changes across your selected time period*")
+    st.subheader("Tendencias de Demanda en el Tiempo")
+    st.markdown("*Cómo cambia la demanda en el período seleccionado*")
     
     groupby_trend = st.selectbox(
-        "Group by",
+        "Agrupar por",
         options=[None, 'product_name', 'category', 'region', 'store_id'],
         index=0,
-        help="Break down trends by specific dimensions"
+        help="Desglosa tendencias por dimensiones específicas"
     )
     fig_trend = plot_demand_trend(df, groupby=groupby_trend)
     st.plotly_chart(fig_trend, use_container_width=True)
 
 with tab2:
-    st.subheader("Demand Distribution")
-    st.markdown("*How demand is distributed across different factors*")
+    st.subheader("Distribución de Demanda")
+    st.markdown("*Cómo se distribuye la demanda entre diferentes factores*")
     
     groupby_dist = st.selectbox(
-        "Group distribution by",
+        "Agrupar distribución por",
         options=[None, 'product_name', 'category', 'region', 'store_id', 'seasonality', 'weather_condition'],
         index=0,
-        help="Compare demand distributions across categories"
+        help="Compara distribuciones de demanda entre categorías"
     )
     fig_dist = plot_demand_distribution(df, groupby=groupby_dist)
     st.plotly_chart(fig_dist, use_container_width=True)
 
 with tab3:
-    st.subheader("Seasonal Patterns")
-    st.markdown("*Recurring demand patterns by time periods*")
+    st.subheader("Patrones Estacionales")
+    st.markdown("*Patrones recurrentes de demanda por períodos*")
     
-    # Monthly seasonality
+    # Estacionalidad mensual
     if 'month' in df.columns:
-        st.markdown("**Monthly Patterns**")
+        st.markdown("**Patrones Mensuales**")
         monthly_agg = df.groupby(['month', 'product_name'])['units_sold'].sum().reset_index()
         fig_monthly = px.line(monthly_agg, x='month', y='units_sold', color='product_name',
-                             title='Monthly Demand by Product',
-                             labels={'month': 'Month', 'units_sold': 'Units Sold'})
+                             title='Demanda Mensual por Producto',
+                             labels={'month': 'Mes', 'units_sold': 'Unidades Vendidas'})
         st.plotly_chart(fig_monthly, use_container_width=True)
     
-    # Day of week seasonality
+    # Estacionalidad por día de semana
     if 'day_of_week' in df.columns:
-        st.markdown("**Day-of-Week Patterns**")
+        st.markdown("**Patrones por Día de Semana**")
         dow_agg = df.groupby(['day_of_week', 'product_name'])['units_sold'].sum().reset_index()
         fig_dow = px.line(dow_agg, x='day_of_week', y='units_sold', color='product_name',
-                         title='Weekly Demand Patterns',
-                         labels={'day_of_week': 'Day of Week (0=Monday)', 'units_sold': 'Units Sold'})
+                         title='Patrones de Demanda Semanal',
+                         labels={'day_of_week': 'Día de Semana (0=Lunes)', 'units_sold': 'Unidades Vendidas'})
         st.plotly_chart(fig_dow, use_container_width=True)
 
-# Price and discount analysis with explanations
-st.header("Price Sensitivity Analysis")
+# Análisis de precios y descuentos con explicaciones
+st.header("Análisis de Sensibilidad a Precios")
 st.markdown("""
-Examine how pricing and promotions affect demand:  
-- **Price Elasticity**: How demand changes with price
-- **Discount Impact**: Effectiveness of promotions
+Examina cómo los precios y promociones afectan la demanda:  
+- **Elasticidad de Precio**: Cómo cambia la demanda con el precio
+- **Impacto de Descuentos**: Efectividad de las promociones
 """)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Price vs Demand")
-    st.markdown("*Relationship between price and units sold*")
+    st.subheader("Precio vs Demanda")
+    st.markdown("*Relación entre precio y unidades vendidas*")
     fig_price = px.scatter(df, x='price', y='units_sold', color='category',
                           trendline="lowess",
-                          title="Price Elasticity of Demand",
-                          labels={'price': 'Price ($)', 'units_sold': 'Units Sold'})
+                          title="Elasticidad-Precio de la Demanda",
+                          labels={'price': 'Precio ($)', 'units_sold': 'Unidades Vendidas'})
     st.plotly_chart(fig_price, use_container_width=True)
 
 with col2:
-    st.subheader("Discount Impact")
-    st.markdown("*How discounts affect sales volume*")
+    st.subheader("Impacto de Descuentos")
+    st.markdown("*Cómo los descuentos afectan el volumen de ventas*")
     fig_discount = px.box(df, x='discount', y='units_sold', color='category',
-                         title="Demand Distribution by Discount Level",
-                         labels={'discount': 'Discount (%)', 'units_sold': 'Units Sold'})
+                         title="Distribución de Demanda por Nivel de Descuento",
+                         labels={'discount': 'Descuento (%)', 'units_sold': 'Unidades Vendidas'})
     st.plotly_chart(fig_discount, use_container_width=True)
 
-# Inventory analysis with business context
-st.header("Inventory Optimization")
+# Análisis de inventario con contexto empresarial
+st.header("Optimización de Inventario")
 st.markdown("""
-Key metrics for inventory management:  
-- **Turnover**: How quickly inventory sells  
-- **Stockout Risk**: Probability of running out  
+Métricas clave para gestión de inventario:  
+- **Rotación**: Qué tan rápido se vende el inventario  
+- **Riesgo de Agotamiento**: Probabilidad de quedarse sin stock  
 """)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Inventory Turnover")
-    st.markdown("*Sales relative to inventory levels*")
+    st.subheader("Rotación de Inventario")
+    st.markdown("*Ventas relativas a los niveles de inventario*")
     df['inventory_turnover'] = df['units_sold'] / df['inventory_level']
     fig_turnover = px.box(df, x='category', y='inventory_turnover',
-                         title="Inventory Turnover by Category",
-                         labels={'category': 'Category', 'inventory_turnover': 'Turnover Ratio'})
+                         title="Rotación de Inventario por Categoría",
+                         labels={'category': 'Categoría', 'inventory_turnover': 'Ratio de Rotación'})
     st.plotly_chart(fig_turnover, use_container_width=True)
 
 with col2:
-    st.subheader("Stockout Risk")
-    st.markdown("*Likelihood of inventory depletion*")
+    st.subheader("Riesgo de Agotamiento")
+    st.markdown("*Probabilidad de agotar el inventario*")
     df['stockout_risk'] = (df['units_sold'] / df['inventory_level']).clip(upper=1)
     fig_stockout = px.box(df, x='category', y='stockout_risk',
-                         title="Stockout Risk by Category",
-                         labels={'category': 'Category', 'stockout_risk': 'Risk Probability'})
+                         title="Riesgo de Agotamiento por Categoría",
+                         labels={'category': 'Categoría', 'stockout_risk': 'Probabilidad de Riesgo'})
     st.plotly_chart(fig_stockout, use_container_width=True)
 
-# Economic impact analysis with explanations
-st.header("Business Impact Analysis")
+# Análisis de impacto económico con explicaciones
+st.header("Análisis de Impacto Empresarial")
 st.markdown("""
-Financial implications of inventory decisions:  
-- **Revenue Loss**: From missed sales opportunities  
-- **Overstock Costs**: From excess inventory holding  
+Implicaciones financieras de decisiones de inventario:  
+- **Pérdida de Ingresos**: Por oportunidades de venta perdidas  
+- **Costos de Exceso**: Por mantener inventario excesivo  
 """)
 
-# Calculate potential revenue loss from stockouts
+# Calcula pérdida potencial por agotamientos
 df['potential_revenue_loss'] = np.where(
     df['units_sold'] > df['inventory_level'],
     (df['units_sold'] - df['inventory_level']) * df['price'],
     0
 )
 
-# Calculate overstock cost
+# Calcula costo de exceso
 df['overstock_cost'] = np.where(
     df['inventory_level'] > df['units_sold'],
-    (df['inventory_level'] - df['units_sold']) * df['price'] * 0.3,  # 30% holding cost
+    (df['inventory_level'] - df['units_sold']) * df['price'] * 0.3,  # 30% costo de mantenimiento
     0
 )
 
@@ -298,18 +298,18 @@ total_revenue_loss = df['potential_revenue_loss'].sum()
 total_overstock_cost = df['overstock_cost'].sum()
 
 col1, col2 = st.columns(2)
-col1.metric("Total Potential Revenue Loss from Stockouts", 
+col1.metric("Pérdida Total Potencial por Agotamientos", 
            f"${total_revenue_loss:,.0f}",
-           help="Lost revenue from insufficient inventory")
-col2.metric("Total Overstock Holding Costs", 
+           help="Ingresos perdidos por inventario insuficiente")
+col2.metric("Costos Totales de Exceso", 
            f"${total_overstock_cost:,.0f}",
-           help="Costs from excess inventory (30% holding cost)")
+           help="Costos por inventario excesivo (30% costo de mantenimiento)")
 
-# Performance products table with context
-st.subheader("Top Products Needing Inventory Adjustment")
+# Tabla de productos problemáticos con contexto
+st.subheader("Productos Prioritarios que Necesitan Ajuste")
 st.markdown("""
-Products with the largest inventory mismatches:  
-🔴 = High priority | 🟡 = Medium priority | 🔵 = Low priority  
+Productos con mayores desajustes de inventario:  
+🔴 = Alta prioridad | 🟡 = Prioridad media | 🔵 = Baja prioridad  
 """)
 
 worst_products = df.groupby('product_name').agg({
@@ -317,7 +317,7 @@ worst_products = df.groupby('product_name').agg({
     'overstock_cost': 'sum'
 }).sort_values('potential_revenue_loss', ascending=False).head(10)
 
-# Add priority indicators
+# Añade indicadores de prioridad
 def highlight_priority(row):
     if row['potential_revenue_loss'] > 10000:
         return ['background-color: #ffcccc'] * len(row)
@@ -329,22 +329,22 @@ st.dataframe(
     worst_products.style.format("${:,.0f}").apply(highlight_priority, axis=1)
 )
 
-# Model training section with warning
-st.sidebar.header("Model Training")
+# Sección de entrenamiento de modelo con advertencia
+st.sidebar.header("Entrenamiento de Modelo")
 st.sidebar.markdown("""
-⚠️ Advanced Feature  
-Only use if you've updated the dataset significantly
+⚠️ Función Avanzada  
+Usar solo si has actualizado significativamente el conjunto de datos
 """)
 
-if st.sidebar.button("Fit and Save Preprocessor"):
-    with st.spinner("Fitting and saving preprocessor..."):
+if st.sidebar.button("Ajustar y Guardar Preprocesador"):
+    with st.spinner("Ajustando y guardando preprocesador..."):
         try:
             from utils.preprocessing import preprocess_data
             preprocess_data(df, training=True)
-            st.sidebar.success("Preprocessor fitted and saved successfully!")
+            st.sidebar.success("¡Preprocesador ajustado y guardado exitosamente!")
         except Exception as e:
-            st.sidebar.error(f"Error fitting preprocessor: {str(e)}")
+            st.sidebar.error(f"Error ajustando preprocesador: {str(e)}")
 
-# Add data freshness indicator
+# Añade indicador de actualización de datos
 st.markdown("---")
-st.caption(f"Data last loaded: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+st.caption(f"Datos cargados por última vez: {datetime.now().strftime('%Y-%m-%d %H:%M')}")

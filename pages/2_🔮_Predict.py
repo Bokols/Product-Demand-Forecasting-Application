@@ -7,45 +7,45 @@ from utils.preprocessing import clean_column_names, add_product_names
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Page configuration
-st.set_page_config(page_title="Demand Predictor", page_icon="🔮", layout="wide")
-st.title("🔮 Demand Predictor")
+# Configuración de página
+st.set_page_config(page_title="Pronosticador de Demanda", page_icon="🔮", layout="wide")
+st.title("🔮 Pronosticador de Demanda")
 st.markdown("""
-Generate demand forecasts and analyze business impact.  
-Adjust parameters in the sidebar and click **Generate Forecast** to see predictions.
+Genera pronósticos de demanda y analiza el impacto empresarial.  
+Ajusta los parámetros en la barra lateral y haz clic en **Generar Pronóstico** para ver predicciones.
 """)
 
-# Add introductory explanation
-with st.expander("ℹ️ About this tool", expanded=False):
+# Explicación introductoria
+with st.expander("ℹ️ Acerca de esta herramienta", expanded=False):
     st.markdown("""
-    This demand predictor uses machine learning to forecast product demand based on:
-    - Historical sales patterns
-    - Current inventory levels
-    - Pricing and promotion data
-    - External factors like seasonality and weather
+    Este pronosticador usa aprendizaje automático para predecir la demanda basado en:
+    - Patrones históricos de ventas
+    - Niveles actuales de inventario
+    - Datos de precios y promociones
+    - Factores externos como estacionalidad y clima
     
-    **Key features**:
-    - Scenario planning with adjustable business parameters
-    - Inventory optimization recommendations
-    - Business impact projections
-    - Exportable forecast data
+    **Características principales**:
+    - Planificación de escenarios con parámetros ajustables
+    - Recomendaciones para optimizar inventario
+    - Proyecciones de impacto empresarial
+    - Datos exportables del pronóstico
     """)
 
 @st.cache_resource
 def load_forecast_model():
-    """Load the trained pipeline"""
+    """Carga el modelo entrenado"""
     model_path = Path('model') / 'best_lightgbm_pipeline.pkl'
     try:
         pipeline = load_model(model_path)
         st.session_state['model_features'] = pipeline.n_features_in_
         return pipeline
     except Exception as e:
-        st.error(f"❌ Failed to load model: {str(e)}")
+        st.error(f"❌ Error al cargar el modelo: {str(e)}")
         st.stop()
 
 @st.cache_data
 def load_historical_data():
-    """Load historical data"""
+    """Carga datos históricos"""
     data_path = Path('data') / 'retail_store_inventory.csv'
     try:
         df = pd.read_csv(data_path)
@@ -54,16 +54,16 @@ def load_historical_data():
         df['date'] = pd.to_datetime(df['date'])
         return df
     except Exception as e:
-        st.error(f"❌ Failed to load data: {str(e)}")
+        st.error(f"❌ Error al cargar datos: {str(e)}")
         st.stop()
 
 def generate_prediction_input(historical_df, future_dates):
-    """Generate prediction dataframe with all required features"""
+    """Genera dataframe de entrada con todas las características requeridas"""
     try:
-        # Use most recent data as template
+        # Usa los datos más recientes como plantilla
         template = historical_df[historical_df['date'] == historical_df['date'].max()].copy()
         
-        # Create future dates
+        # Crea fechas futuras
         prediction_data = []
         for date in future_dates:
             temp = template.copy()
@@ -72,7 +72,7 @@ def generate_prediction_input(historical_df, future_dates):
         
         prediction_df = pd.concat(prediction_data)
         
-        # Ensure all required features exist
+        # Asegura que existan todas las características requeridas
         required_features = [
             'store_id', 'product_id', 'category', 'region',
             'price', 'discount', 'competitor_pricing',
@@ -86,14 +86,14 @@ def generate_prediction_input(historical_df, future_dates):
         
         prediction_df['date'] = pd.to_datetime(prediction_df['date'])
         
-        # Add date features
+        # Añade características de fecha
         date_features = ['year', 'month', 'day', 'day_of_week', 'day_of_year', 'quarter']
         for feat in date_features:
             prediction_df[feat] = getattr(prediction_df['date'].dt, feat.lower())
         
         prediction_df['week_of_year'] = prediction_df['date'].dt.isocalendar().week
         
-        # Add derived features
+        # Añade características derivadas
         min_date = historical_df['date'].min()
         prediction_df['days_since_start'] = (prediction_df['date'] - min_date).dt.days
         prediction_df['price_discount_ratio'] = prediction_df['discount'] / (prediction_df['price'] + 1e-10)
@@ -102,81 +102,81 @@ def generate_prediction_input(historical_df, future_dates):
         
         return prediction_df
     except Exception as e:
-        st.error(f"❌ Error generating input: {str(e)}")
+        st.error(f"❌ Error generando datos de entrada: {str(e)}")
         st.stop()
 
-# Load model and data
+# Carga modelo y datos
 model = load_forecast_model()
 historical_df = load_historical_data()
 
-# Sidebar controls with tooltips
-st.sidebar.header("Prediction Parameters")
+# Controles de la barra lateral con tooltips
+st.sidebar.header("Parámetros de Predicción")
 
-# Forecast horizon with explanation
+# Horizonte de pronóstico con explicación
 horizon = st.sidebar.selectbox(
-    "Forecast Horizon",
-    options=["Next 7 days", "Next 14 days", "Next 30 days"],
+    "Horizonte de Pronóstico",
+    options=["Próximos 7 días", "Próximos 14 días", "Próximos 30 días"],
     index=0,
-    help="Select how many days into the future you want to predict. The model generates daily demand predictions."
+    help="Selecciona cuántos días en el futuro quieres predecir. El modelo genera predicciones diarias de demanda."
 )
 
 n_days = 7 if "7" in horizon else 14 if "14" in horizon else 30
 
-# Generate future dates starting from today
+# Genera fechas futuras desde hoy
 today = datetime.now().date()
 future_dates = [today + timedelta(days=i) for i in range(1, n_days+1)]
 prediction_input = generate_prediction_input(historical_df, future_dates)
 
-# Product selection with explanation
+# Selección de productos con explicación
 selected_products = st.sidebar.multiselect(
-    "Products to Forecast",
+    "Productos a Pronosticar",
     options=historical_df['product_name'].unique(),
     default=historical_df['product_name'].unique()[:3],
-    help="Select specific products to analyze. Leave blank to include all products."
+    help="Selecciona productos específicos para analizar. Deja en blanco para incluir todos."
 )
 
 if selected_products:
     prediction_input = prediction_input[prediction_input['product_name'].isin(selected_products)]
 
-# Business parameters section with explanations
-st.sidebar.subheader("Business Scenarios")
-st.sidebar.markdown("Adjust these parameters to simulate different business conditions:")
+# Sección de parámetros empresariales con explicaciones
+st.sidebar.subheader("Escenarios Empresariales")
+st.sidebar.markdown("Ajusta estos parámetros para simular diferentes condiciones:")
 
 price_adjustment = st.sidebar.slider(
-    "Price Adjustment (%)", 
+    "Ajuste de Precio (%)", 
     -50, 50, 0, 5,
-    help="Simulate price changes. Positive values = price increases, negative = decreases. Affects demand elasticity."
+    help="Simula cambios de precio. Valores positivos = aumentos, negativos = descuentos. Afecta la elasticidad de la demanda."
 )
 
 discount_adjustment = st.sidebar.slider(
-    "Discount Adjustment (%)", 
+    "Ajuste de Descuento (%)", 
     -100, 100, 0, 5,
-    help="Change discount levels. Positive values = more promotions, negative = fewer. Max 100% discount."
+    help="Cambia niveles de descuento. Valores positivos = más promociones, negativos = menos. Máximo 100% de descuento."
 )
 
 comp_adjustment = st.sidebar.slider(
-    "Competitor Price Adjustment (%)", 
+    "Ajuste de Precio Competencia (%)", 
     -50, 50, 0, 5,
-    help="Simulate competitor price changes. Positive values = they increase prices, negative = they discount."
+    help="Simula cambios de precios de competidores. Valores positivos = aumentan precios, negativos = descuentos."
 )
 
 holiday_promotion = st.sidebar.checkbox(
-    "Holiday/Promotion Period", 
+    "Período de Promoción/Festivo", 
     False,
-    help="Check this to account for seasonal demand surges during holidays or special promotions."
+    help="Marca esto para considerar aumentos estacionales de demanda durante festivos o promociones."
 )
 
-# Apply adjustments
+# Aplica ajustes
 prediction_input['price'] *= (1 + price_adjustment/100)
 prediction_input['discount'] = np.clip(prediction_input['discount'] * (1 + discount_adjustment/100), 0, 100)
 prediction_input['competitor_pricing'] *= (1 + comp_adjustment/100)
-prediction_input['holiday_promotion'] = 'yes' if holiday_promotion else 'no'
+prediction_input['holiday_promotion'] = 'si' if holiday_promotion else 'no'
 
-# Generate predictions button with status explanation
-if st.sidebar.button("Generate Forecast", type="primary"):
-    with st.spinner("Generating predictions... This may take a moment for large datasets."):
+# Botón para generar predicciones con explicación de estado
+if st.sidebar.button("Generar Pronóstico", type="primary"):
+    with st.spinner("Generando predicciones... Esto puede tomar un momento para conjuntos grandes."):
         try:
-            # Validate all required columns exist
+            # Valida que existan todas las columnas requeridas
             required_columns = [
                 'store_id', 'product_id', 'category', 'region',
                 'price', 'discount', 'competitor_pricing',
@@ -190,121 +190,121 @@ if st.sidebar.button("Generate Forecast", type="primary"):
             
             missing_columns = [col for col in required_columns if col not in prediction_input.columns]
             if missing_columns:
-                st.error(f"❌ Missing required columns: {missing_columns}")
+                st.error(f"❌ Columnas requeridas faltantes: {missing_columns}")
                 st.stop()
             
             predictions = make_predictions(model, prediction_input)
             prediction_input['predicted_demand'] = predictions
             
-            # Calculate business impact
+            # Calcula impacto empresarial
             business_impact = calculate_business_impact(
                 predictions,
                 price_data=prediction_input['price'].values,
                 inventory_data=prediction_input['inventory_level'].values
             )
             
-            # Generate recommendations
+            # Genera recomendaciones
             recommendations = generate_recommendations(predictions, prediction_input)
             
-            # Store results
+            # Almacena resultados
             st.session_state['predictions'] = prediction_input
             st.session_state['business_impact'] = business_impact
             st.session_state['recommendations'] = recommendations
             
-            st.success("✅ Forecast generated successfully!")
+            st.success("✅ ¡Pronóstico generado exitosamente!")
         except Exception as e:
-            st.error(f"❌ Prediction failed: {str(e)}")
+            st.error(f"❌ Error en la predicción: {str(e)}")
 
-# Display results with enhanced explanations
+# Muestra resultados con explicaciones mejoradas
 if 'predictions' in st.session_state:
     predictions_df = st.session_state['predictions']
     business_impact = st.session_state['business_impact']
     recommendations = st.session_state['recommendations']
     
-    # Metrics with explanations
-    st.header("Forecast Summary")
-    with st.expander("Understanding these metrics"):
+    # Métricas con explicaciones
+    st.header("Resumen del Pronóstico")
+    with st.expander("Entendiendo estas métricas"):
         st.markdown("""
-        - **Total Predicted Demand**: Sum of all units expected to be sold
-        - **Average Daily Demand**: Mean units sold per day
-        - **Projected Revenue**: Estimated income (price × predicted demand)
-        - **Total Inventory Cost**: Holding costs for overstock + lost sales from understock
+        - **Demanda Total Pronosticada**: Suma de todas las unidades esperadas a vender
+        - **Demanda Diaria Promedio**: Media de unidades vendidas por día
+        - **Ingresos Proyectados**: Ingresos estimados (precio × demanda pronosticada)
+        - **Costo Total de Inventario**: Costos por exceso + ventas perdidas por faltante
         """)
     
     cols = st.columns(4)
-    cols[0].metric("Total Predicted Demand", f"{business_impact['total_predicted']:,.0f} units")
-    cols[1].metric("Average Daily Demand", f"{business_impact['mean_demand']:,.1f} units")
-    cols[2].metric("Projected Revenue", f"${business_impact.get('projected_revenue', 0):,.0f}")
-    cols[3].metric("Total Inventory Cost", f"${business_impact.get('total_cost', 0):,.0f}")
+    cols[0].metric("Demanda Total Pronosticada", f"{business_impact['total_predicted']:,.0f} unidades")
+    cols[1].metric("Demanda Diaria Promedio", f"{business_impact['mean_demand']:,.1f} unidades")
+    cols[2].metric("Ingresos Proyectados", f"${business_impact.get('projected_revenue', 0):,.0f}")
+    cols[3].metric("Costo Total de Inventario", f"${business_impact.get('total_cost', 0):,.0f}")
     
-    # Visualization with explanation
-    st.header("Demand Forecast")
+    # Visualización con explicación
+    st.header("Pronóstico de Demanda")
     st.markdown(f"""
-    *Daily predicted demand for selected products over {horizon.lower()}*
+    *Demanda diaria pronosticada para los productos seleccionados en {horizon.lower()}*
     """)
     fig = px.line(
         predictions_df.groupby(['date', 'product_name'])['predicted_demand'].sum().reset_index(),
         x='date', y='predicted_demand', color='product_name',
-        title=f"{horizon} Demand Forecast",
-        labels={'predicted_demand': 'Predicted Demand (units)', 'date': 'Date'}
+        title=f"Pronóstico de Demanda {horizon}",
+        labels={'predicted_demand': 'Demanda Pronosticada (unidades)', 'date': 'Fecha'}
     )
     st.plotly_chart(fig, use_container_width=True)
     
-    # Business Impact with detailed explanations
-    st.header("Inventory Analysis")
-    with st.expander("How to interpret inventory analysis"):
+    # Impacto Empresarial con explicaciones detalladas
+    st.header("Análisis de Inventario")
+    with st.expander("Cómo interpretar el análisis de inventario"):
         st.markdown("""
-        - **Overstock Units**: Items likely to remain unsold (inventory > demand)
-        - **Understock Units**: Potential lost sales (demand > inventory)
-        - Optimal inventory matches predicted demand exactly
+        - **Unidades en Exceso**: Ítems que probablemente no se venderán (inventario > demanda)
+        - **Unidades en Faltante**: Ventas potencialmente perdidas (demanda > inventario)
+        - El inventario óptimo coincide exactamente con la demanda pronosticada
         """)
     
     col1, col2 = st.columns(2)
-    col1.metric("Potential Overstock Units", 
+    col1.metric("Unidades Potenciales en Exceso", 
                f"{business_impact.get('overstock_units', 0):,.0f}",
-               help="Units that may remain unsold based on current inventory")
-    col2.metric("Potential Understock Units", 
+               help="Unidades que podrían no venderse según el inventario actual")
+    col2.metric("Unidades Potenciales en Faltante", 
                f"{business_impact.get('understock_units', 0):,.0f}",
-               help="Potential lost sales due to insufficient inventory")
+               help="Ventas potencialmente perdidas por inventario insuficiente")
     
-    # Recommendations with priority indicators
-    st.header("Inventory Recommendations")
+    # Recomendaciones con indicadores de prioridad
+    st.header("Recomendaciones de Inventario")
     st.markdown("""
-    *Color indicators show recommendation priority*  
-    🟥 **High priority** | 🟨 **Medium priority** | 🟩 **Low priority**
+    *Los colores indican la prioridad de la recomendación*  
+    🟥 **Alta prioridad** | 🟨 **Prioridad media** | 🟩 **Baja prioridad**
     """)
     
     for rec in recommendations:
-        if "Increase" in rec and "!" in rec:
+        if "Aumentar" in rec and "!" in rec:
             st.error(rec)
-        elif "Increase" in rec:
+        elif "Aumentar" in rec:
             st.warning(rec)
-        elif "Decrease" in rec and "!" in rec:
+        elif "Reducir" in rec and "!" in rec:
             st.error(rec)
-        elif "Decrease" in rec:
+        elif "Reducir" in rec:
             st.warning(rec)
         else:
             st.success(rec)
     
-    # Data Export with format options
-    st.header("Export Results")
-    with st.expander("Export options"):
+    # Exportación de datos con opciones de formato
+    st.header("Exportar Resultados")
+    with st.expander("Opciones de exportación"):
         st.markdown("""
-        Download forecast data in your preferred format:
-        - CSV for spreadsheets
-        - JSON for APIs and developers
-        - Excel for detailed analysis
+        Descarga los datos del pronóstico en tu formato preferido:
+        - CSV para hojas de cálculo
+        - JSON para APIs y desarrolladores
+        - Excel para análisis detallados
         """)
     
-    export_format = st.selectbox("Export format", ["CSV", "Excel", "JSON"])
+    export_format = st.selectbox("Formato de exportación", ["CSV", "Excel", "JSON"])
     
-    if st.button(f"Download Forecast Data as {export_format}"):
+    if st.button(f"Descargar Datos como {export_format}"):
         if export_format == "CSV":
             csv = predictions_df.to_csv(index=False)
             st.download_button(
-                label="Download CSV",
+                label="Descargar CSV",
                 data=csv,
-                file_name=f"demand_forecast_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"pronostico_demanda_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime='text/csv'
             )
         elif export_format == "Excel":
@@ -313,28 +313,28 @@ if 'predictions' in st.session_state:
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 predictions_df.to_excel(writer, index=False)
             st.download_button(
-                label="Download Excel",
+                label="Descargar Excel",
                 data=output.getvalue(),
-                file_name=f"demand_forecast_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                file_name=f"pronostico_demanda_{datetime.now().strftime('%Y%m%d')}.xlsx",
                 mime='application/vnd.ms-excel'
             )
         elif export_format == "JSON":
             json = predictions_df.to_json(orient='records')
             st.download_button(
-                label="Download JSON",
+                label="Descargar JSON",
                 data=json,
-                file_name=f"demand_forecast_{datetime.now().strftime('%Y%m%d')}.json",
+                file_name=f"pronostico_demanda_{datetime.now().strftime('%Y%m%d')}.json",
                 mime='application/json'
             )
 else:
     st.info("""
-    ℹ️ No forecast generated yet.  
-    Adjust parameters in the sidebar and click **Generate Forecast** to see predictions.
+    ℹ️ Aún no se ha generado un pronóstico.  
+    Ajusta los parámetros en la barra lateral y haz clic en **Generar Pronóstico** para ver predicciones.
     """)
 
-# Add footer with model information
+# Pie de página con información del modelo
 st.markdown("---")
 st.caption(f"""
-Model last trained: {datetime.fromtimestamp(Path('model/best_lightgbm_pipeline.pkl').stat().st_mtime).strftime('%Y-%m-%d')}  
-Using LightGBM algorithm with {model.n_features_in_} features
+Modelo entrenado por última vez: {datetime.fromtimestamp(Path('model/best_lightgbm_pipeline.pkl').stat().st_mtime).strftime('%Y-%m-%d')}  
+Usando algoritmo LightGBM con {model.n_features_in_} características
 """)
