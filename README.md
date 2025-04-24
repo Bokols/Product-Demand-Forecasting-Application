@@ -43,7 +43,7 @@ Se analizaron patrones de comportamiento en los datos históricos de ventas.
 - **Elasticidad de precio:** Existe una correlación negativa entre el precio y las unidades vendidas, especialmente en productos no esenciales.
 - **Promociones:** Descuentos superiores al 20% incrementan fuertemente la demanda, aunque se detectó un umbral de saturación cerca del 50%.
 - **Variabilidad regional:** Algunas regiones presentaron baja rotación de inventario, lo que sugiere sobrestock o baja demanda local.
-- **Desequilibrios de inventario:** Se identificaron faltantes frecuentes durante semanas pico y exceso de stock en períodos de baja rotación.
+- **Desequilibrios de inventario:** Se identificaron faltas de stock frecuentes durante semanas peak y exceso de stock en períodos de baja rotación.
 
 ### 3. Ingeniería de Características
 
@@ -90,7 +90,7 @@ La segunda aplicación permite simular condiciones de negocio y predecir la dema
 
 - Demanda total proyectada
 - Ingresos esperados
-- Riesgos de sobrestock y faltantes
+- Riesgos de falta de stock y sobrestock
 - Costos totales de inventario
 
 ## Resultados y Hallazgos
@@ -103,8 +103,8 @@ La segunda aplicación permite simular condiciones de negocio y predecir la dema
 
 ### Conclusiones de Negocio
 
-- Los **faltantes durante promociones** generaron pérdidas estimadas de más de **$30.000 USD** en un solo mes.
-- El **sobrestock en productos de baja rotación** tuvo costos mensuales superiores a **$12.000 USD** en algunas regiones.
+- El **stock faltante durante promociones** generaron pérdidas estimadas de más de **$30.000 USD** en un solo mes.
+- El **sobrestock en productos de baja rotación** tuvo costos mensuales superiores a **$12.000 USD** en algunas regiones del pais.
 - Pequeños descuentos (10–20%) fueron efectivos sin afectar demasiado el margen.
 - La **rotación de inventario** fue notablemente superior en ciertas categorías, lo que ofrece oportunidades de mejora logística.
 
@@ -112,7 +112,7 @@ La segunda aplicación permite simular condiciones de negocio y predecir la dema
 
 Este proyecto logró desarrollar una solución integral y escalable para la predicción de demanda en el sector retail. La combinación de un modelo robusto, simulación de escenarios y visualización de datos brinda a los usuarios herramientas valiosas para:
 
-- Anticipar la demanda futura
+- Anticipar la futura demanda
 - Optimizar los niveles de inventario
 - Minimizar pérdidas por quiebres o sobrestock
 - Tomar decisiones informadas basadas en datos
